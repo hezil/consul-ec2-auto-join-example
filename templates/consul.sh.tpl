@@ -45,7 +45,7 @@ normal exit 0 INT
 # Stop consul will not mark node as failed but left
 kill signal INT
 exec /usr/local/bin/consul agent \
-  -dev -ui -config-dir="/etc/consul.d"
+  -config-dir="/etc/consul.d"
 EOF
 
 sudo service consul stop || true
