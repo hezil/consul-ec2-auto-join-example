@@ -1,29 +1,29 @@
 # Get the list of official Canonical Ubunt 14.04 AMIs
-data "aws_ami" "ubuntu-1404" {
-  most_recent = true
+# data "aws_ami" "ubuntu-1404" {
+#   most_recent = true
 
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm/ubuntu-trusty-14.04-amd64-server-*"]
-  }
+#   filter {
+#     name   = "name"
+#     values = ["ubuntu/images/hvm/ubuntu-trusty-14.04-amd64-server-*"]
+#   }
 
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
+#   filter {
+#     name   = "virtualization-type"
+#     values = ["hvm"]
+#   }
 
-  owners = ["099720109477"] # Canonical
-}
+#   owners = ["099720109477"] # Canonical
+# }
 
-# Create a VPC to launch our instances into
-resource "aws_vpc" "consul" {
-  cidr_block           = "${var.vpc_cidr_block}"
-  enable_dns_hostnames = true
+# # Create a VPC to launch our instances into
+# resource "aws_vpc" "consul" {
+#   cidr_block           = "${var.vpc_cidr_block}"
+#   enable_dns_hostnames = true
 
-  tags {
-    "Name" = "${var.namespace}"
-  }
-}
+#   tags {
+#     "Name" = "${var.namespace}"
+#   }
+# }
 
 # Create an internet gateway to give our subnet access to the outside world
 resource "aws_internet_gateway" "consul" {
@@ -66,13 +66,52 @@ resource "aws_security_group" "consul" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
+    cidr_blocks = ["10.1.0.0/16"]
+  }
+  
+  ingress {
+    from_port   = 22
+    protocol    = "TCP"
+    to_port     = 22
     cidr_blocks = ["0.0.0.0/0"]
   }
-
+  ingress {
+    from_port   = 80
+    protocol    = "TCP"
+    to_port     = 80
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+    ingress {
+    from_port   = 30036
+    protocol    = "TCP"
+    to_port     = 30036
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_security_group" "elb_security_group" {
+  name = "ELB-SG"
+  description = "ELB Security Group"
+  vpc_id      = "${aws_vpc.consul.id}"
+
+  ingress {
+    from_port = 0
+    protocol = "-1"
+    to_port = 0
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow web traffic to load balancer"
+  }
+
+  egress {
+    from_port = 0
+    protocol = "-1"
+    to_port = 0
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
