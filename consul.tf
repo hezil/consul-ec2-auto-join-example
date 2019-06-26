@@ -86,7 +86,7 @@ resource "aws_elb" "webapp_load_balancer" {
   instances        = ["${aws_instance.client${count.index}.id}"]
   security_groups = ["${aws_security_group.consul.id}"]
   subnets = [
-    "${element(aws_subnet.consul.*.id, count.index)}"
+    "{${element(aws_subnet.consul.*.id, count.index)}"
   ]
   "listener" {
     instance_port = 30036
