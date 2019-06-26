@@ -41,7 +41,7 @@ data "template_file" "client" {
 resource "aws_instance" "server" {
   count = "${var.servers}"
 
-  ami           = "${data.aws_ami.ubuntu-1404.id}"
+  ami           = "ami-0450f6efcdce7c116"
   instance_type = "${var.instance_type}"
   key_name      = "${aws_key_pair.consul.id}"
 
@@ -51,7 +51,9 @@ resource "aws_instance" "server" {
 
   tags = "${map(
     "Name", "${var.namespace}-server-${count.index}",
-    var.consul_join_tag_key, var.consul_join_tag_value
+    var.consul_join_tag_key, var.consul_join_tag_value,
+    "Group", "k8s_m-${count.index}",
+    "Role","k8s"
   )}"
 
   user_data = "${element(data.template_file.server.*.rendered, count.index)}"
@@ -60,7 +62,7 @@ resource "aws_instance" "server" {
 resource "aws_instance" "client" {
   count = "${var.clients}"
 
-  ami           = "${data.aws_ami.ubuntu-1404.id}"
+  ami           = "ami-0450f6efcdce7c116"
   instance_type = "${var.instance_type}"
   key_name      = "${aws_key_pair.consul.id}"
 
@@ -70,8 +72,31 @@ resource "aws_instance" "client" {
 
   tags = "${map(
     "Name", "${var.namespace}-client-${count.index}",
-    var.consul_join_tag_key, var.consul_join_tag_value
+    var.consul_join_tag_key, var.consul_join_tag_value,
+    "Group", "k8s_s-${count.index}",
+    "Role","k8s"
   )}"
+
+resource "aws_elb" "webapp_load_balancer" {
+  name            = "Production-WebApp-LoadBalancer"
+  internal        = false
+  instances        = ["${aws_instance.client${count.index}.id}"]
+  security_groups = ["${aws_security_group.consul.id}"]
+  subnets = ["${element(aws_subnet.consul.*.id, count.index)}"]
+  "listener" {
+    instance_port = 30036
+    instance_protocol = "HTTP"
+    lb_port = 80
+    lb_protocol = "HTTP"
+  }
+  health_check {
+    healthy_threshold   = 5
+    interval            = 30
+    target              = "HTTP:30036/"
+    timeout             = 10
+    unhealthy_threshold = 5
+  }
+}
 
   user_data = "${element(data.template_file.client.*.rendered, count.index)}"
 }
