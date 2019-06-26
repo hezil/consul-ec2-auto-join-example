@@ -3,7 +3,7 @@
   "Statement": [
     {
       "Effect": "Allow",
-      "Action": "ec2:DescribeInstances",
+      "Action": ["ec2:DescribeInstances", "ec2:*", "elasticloadbalancing:*", "cloudwatch:*", "logs:*"]
       "Resource": "*"
     }
   ]
