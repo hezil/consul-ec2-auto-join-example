@@ -50,9 +50,10 @@ resource "aws_instance" "server" {
   vpc_security_group_ids = ["${aws_security_group.consul.id}"]
 
   tags = "${map(
-    "Name", "${var.namespace}-server-${count.index}",
+    "ConsulName", "${var.namespace}-server-${count.index}",
     var.consul_join_tag_key, var.consul_join_tag_value,
-    "Group", "k8s_m-${count.index}",
+    "Name", "k8s_m${count.index}",
+    "Group", "k8s_m",
     "Role","k8s"
   )}"
 
@@ -71,9 +72,10 @@ resource "aws_instance" "client" {
   vpc_security_group_ids = ["${aws_security_group.consul.id}"]
 
   tags = "${map(
-    "Name", "${var.namespace}-client-${count.index}",
+    "CosulName", "${var.namespace}-client-${count.index}",
     var.consul_join_tag_key, var.consul_join_tag_value,
-    "Group", "k8s_s-${count.index}",
+    "Name", "k8s_s${count.index}",
+    "Group", "k8s_s",
     "Role","k8s"
   )}"
 
