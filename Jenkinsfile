@@ -10,7 +10,7 @@ node('Jenkins_slave_ansible_docker') {
   }
   
   stage "consul-ec2-auto-join-example"
-  dir('infrastructure/') {
+  dir('./') {
       sh('terraform init')
       sh('terraform plan')
       sh('terraform apply -auto-approve')
