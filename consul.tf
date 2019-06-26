@@ -77,6 +77,9 @@ resource "aws_instance" "client" {
     "Role","k8s"
   )}"
 
+  user_data = "${element(data.template_file.client.*.rendered, count.index)}"
+}
+
 resource "aws_elb" "webapp_load_balancer" {
   name            = "Production-WebApp-LoadBalancer"
   internal        = false
@@ -96,9 +99,6 @@ resource "aws_elb" "webapp_load_balancer" {
     timeout             = 10
     unhealthy_threshold = 5
   }
-}
-
-  user_data = "${element(data.template_file.client.*.rendered, count.index)}"
 }
 
 output "servers" {
