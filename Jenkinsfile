@@ -1,0 +1,18 @@
+node('Jenkins_slave_ansible_docker') { 
+  
+    
+  stage('Pre') { // Run pre-build steps
+    cleanWs()
+  }  
+  stage('Git') { // Get code from GitLab repository
+    git branch: 'master',
+      url: 'https://github.com/hezil/consul-ec2-auto-join-example.git'
+  }
+  
+  stage "consul-ec2-auto-join-example"
+  dir('infrastructure/') {
+      sh('terraform init')
+      sh('terraform plan')
+      sh('terraform apply -auto-approve')
+  }
+}
