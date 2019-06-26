@@ -15,15 +15,15 @@
 #   owners = ["099720109477"] # Canonical
 # }
 
-# # Create a VPC to launch our instances into
-# resource "aws_vpc" "consul" {
-#   cidr_block           = "${var.vpc_cidr_block}"
-#   enable_dns_hostnames = true
+# Create a VPC to launch our instances into
+resource "aws_vpc" "consul" {
+  cidr_block           = "${var.vpc_cidr_block}"
+  enable_dns_hostnames = true
 
-#   tags {
-#     "Name" = "${var.namespace}"
-#   }
-# }
+  tags {
+    "Name" = "${var.namespace}"
+  }
+}
 
 # Create an internet gateway to give our subnet access to the outside world
 resource "aws_internet_gateway" "consul" {
