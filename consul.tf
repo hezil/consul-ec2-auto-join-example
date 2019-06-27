@@ -78,10 +78,6 @@ resource "aws_instance" "client" {
     "Role","k8s"
   )}"
 
-  provisioner "local-exec" {
-    command = "echo ${aws_instance.server.*.public_ip} >> private_ips.txt"
-  }
-
   user_data = "${element(data.template_file.client.*.rendered, count.index)}"
 }
 
