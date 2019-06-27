@@ -22,7 +22,9 @@ data "template_file" "server" {
 data "template_file" "client" {
   count    = "${var.clients}"
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
-
+  provisioner "local-exec" {
+    command = "echo ${self.private_ip} > file.txt"
+  }
   vars {
     consul_version = "0.7.5"
 
