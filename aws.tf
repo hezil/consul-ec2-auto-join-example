@@ -136,7 +136,7 @@ resource "aws_security_group" "consul" {
 resource "aws_security_group" "elb_security_group" {
   name = "ELB-SG"
   description = "ELB Security Group"
-  vpc_id = "${data.terraform_remote_state.network_configuration.vpc_id}"
+  vpc_id      = "${aws_vpc.consul.id}"
 
   ingress {
     from_port = 0
