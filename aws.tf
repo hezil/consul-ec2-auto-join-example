@@ -1,267 +1,132 @@
-# #Get the list of official Canonical Ubunt 14.04 AMIs
-# data "aws_ami" "ubuntu-1404" {
-#   most_recent = true
-
-#   filter {
-#     name   = "name"
-#     values = ["ubuntu/images/hvm/ubuntu-trusty-14.04-amd64-server-*"]
-#   }
-
-#   filter {
-#     name   = "virtualization-type"
-#     values = ["hvm"]
-#   }
-
-#   owners = ["099720109477"] # Canonical
-# }
-
 terraform {
   backend "s3" {
-    bucket = "us-east-2"
+  region="us-east-2"
+  key="layer2/backend.tfstate"
+  bucket="terraform-remote-state-11.03.2019"
+  }
+}
+
+data "terraform_remote_state" "network_configuration" {
+  backend = "s3"
+
+  config {
+    bucket = "terraform-remote-state-11.03.2019"
     key    = "layer1/infrastructure.tfstate"
-    region = "terraform-remote-state-11.03.2019"
+    region = "us-east-2"
+    access_key = ""
+    secret_key = ""
   }
 }
 
+# Create the user-data for the Consul server
+data "template_file" "server" {
+  count    = "${var.servers}"
+  template = "${file("${path.module}/templates/consul.sh.tpl")}"
 
-# Create a VPC to launch our instances into
-resource "aws_vpc" "consul" {
-  cidr_block           = "${var.vpc_cidr_block}"
-  enable_dns_hostnames = true
+  vars {
+    consul_version = "0.7.5"
 
-  tags {
-    "Name" = "${var.namespace}"
+    config = <<EOF
+     "bootstrap_expect": 3,
+     "node_name": "${var.namespace}-server-${count.index}",
+     "retry_join_ec2": {
+       "tag_key": "${var.consul_join_tag_key}",
+       "tag_value": "${var.consul_join_tag_value}"
+     },
+     "server": true
+    EOF
   }
 }
 
-# Create an internet gateway to give our subnet access to the outside world
-resource "aws_internet_gateway" "consul" {
-  vpc_id = "${aws_vpc.consul.id}"
+# Create the user-data for the Consul server
+data "template_file" "client" {
+  count    = "${var.clients}"
+  template = "${file("${path.module}/templates/consul.sh.tpl")}"
+  vars {
+    consul_version = "0.7.5"
 
-  tags {
-    "Name" = "${var.namespace}"
+    config = <<EOF
+     "node_name": "${var.namespace}-client-${count.index}",
+     "retry_join_ec2": {
+       "tag_key": "${var.consul_join_tag_key}",
+       "tag_value": "${var.consul_join_tag_value}"
+     },
+     "server": false
+    EOF
   }
 }
 
-# Grant the VPC internet access on its main route table
-resource "aws_route" "internet_access" {
-  route_table_id         = "${aws_vpc.consul.main_route_table_id}"
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = "${aws_internet_gateway.consul.id}"
+# Create the Consul cluster
+resource "aws_instance" "server" {
+  count = "${var.servers}"
+
+  ami           = "ami-0450f6efcdce7c116"
+  instance_type = "${var.instance_type}"
+  key_name      = "${aws_key_pair.consul.id}"
+
+  subnet_id              = "${element(aws_subnet.consul.*.id, count.index)}"
+  iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
+  vpc_security_group_ids = ["${aws_security_group.consul.id}"]
+
+  tags = "${map(
+    "ConsulName", "${var.namespace}-server-${count.index}",
+    var.consul_join_tag_key, var.consul_join_tag_value,
+    "Name", "k8s_m${count.index}",
+    "Group", "k8s_m",
+    "Role","k8s"
+  )}"
+
+  user_data = "${element(data.template_file.server.*.rendered, count.index)}"
 }
 
-# Grab the list of availability zones
-data "aws_availability_zones" "available" {}
+resource "aws_instance" "client" {
+  count = "${var.clients}"
 
-# Create a subnet to launch our instances into
-resource "aws_subnet" "consul" {
-  count                   = "${length(var.cidr_blocks)}"
-  vpc_id                  = "${aws_vpc.consul.id}"
-  availability_zone       = "${data.aws_availability_zones.available.names[count.index]}"
-  cidr_block              = "${var.cidr_blocks[count.index]}"
-  map_public_ip_on_launch = true
+  ami           = "ami-0450f6efcdce7c116"
+  instance_type = "${var.instance_type}"
+  key_name      = "${aws_key_pair.consul.id}"
 
-  tags {
-    "Name" = "${var.namespace}"
+  subnet_id              = "${element(aws_subnet.consul.*.id, count.index)}"
+  iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
+  vpc_security_group_ids = ["${aws_security_group.consul.id}"]
+
+  tags = "${map(
+    "CosulName", "${var.namespace}-client-${count.index}",
+    var.consul_join_tag_key, var.consul_join_tag_value,
+    "Name", "k8s_s${count.index}",
+    "Group", "k8s_s",
+    "Role","k8s"
+  )}"
+
+  user_data = "${element(data.template_file.client.*.rendered, count.index)}"
+}
+
+resource "aws_elb" "webapp_load_balancer" {
+  name            = "Production-WebApp-LoadBalancer"
+  internal        = false
+  //instances        = ["${element(aws_instance.client.*.id, count.index)}"]
+  instances        = ["${aws_instance.client.*.id}"]
+  security_groups = ["${aws_security_group.consul.id}"]
+  subnets = ["${aws_subnet.consul.*.id}"]
+  "listener" {
+    instance_port = 30036
+    instance_protocol = "HTTP"
+    lb_port = 80
+    lb_protocol = "HTTP"
+  }
+  health_check {
+    healthy_threshold   = 5
+    interval            = 30
+    target              = "HTTP:30036/"
+    timeout             = 10
+    unhealthy_threshold = 5
   }
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-resource "aws_security_group" "final_project" {
-  name        = "final_project"
-  description = "Allow ssh & consul inbound traffic"
-=======
-=======
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
->>>>>>> parent of 0a0a5c6... Update aws.tf
-# A security group that makes the instances accessible
-resource "aws_security_group" "consul" {
-  name_prefix = "${var.namespace}"
-  vpc_id      = "${aws_vpc.consul.id}"
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
->>>>>>> parent of 0a0a5c6... Update aws.tf
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["10.0.0.0/8"]
-  }
-  
-  ingress {
-    from_port   = 22
-    protocol    = "TCP"
-    to_port     = 22
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    from_port   = 80
-    protocol    = "TCP"
-    to_port     = 80
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  
-  ingress {
-    from_port   = 30036
-    protocol    = "TCP"
-    to_port     = 30036
-    cidr_blocks = ["0.0.0.0/0"]
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-      
-  ingress {
-=======
-  }
-  egress {
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  }
-  egress {
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  }
-  egress {
->>>>>>> parent of 0a0a5c6... Update aws.tf
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+output "servers" {
+  value = ["${aws_instance.server.*.public_ip}"]
 }
 
-resource "aws_security_group" "elb_security_group" {
-  name = "ELB-SG"
-  description = "ELB Security Group"
-  vpc_id      = "${aws_vpc.consul.id}"
-
-  ingress {
-    from_port = 0
-    protocol = "-1"
-    to_port = 0
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow web traffic to load balancer"
-  }
-
-  egress {
-    from_port = 0
-    protocol = "-1"
-    to_port = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+output "clients" {
+  value = ["${aws_instance.client.*.public_ip}"]
 }
-
-resource "aws_key_pair" "consul" {
-  key_name   = "${var.namespace}"
-  public_key = "${file("${var.public_key_path}")}"
-}
-
-# Create an IAM role for the auto-join
-resource "aws_iam_role" "consul-join" {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  name               = "final_project-consul-join"
-=======
-  name               = "${var.namespace}-consul-join"
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  name               = "${var.namespace}-consul-join"
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  name               = "${var.namespace}-consul-join"
->>>>>>> parent of 0a0a5c6... Update aws.tf
-  assume_role_policy = "${file("${path.module}/templates/policies/assume-role.json")}"
-}
-
-# Create the policy
-resource "aws_iam_policy" "consul-join" {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  name        = "final_project-consul-join"
-=======
-  name        = "${var.namespace}-consul-join"
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  name        = "${var.namespace}-consul-join"
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  name        = "${var.namespace}-consul-join"
->>>>>>> parent of 0a0a5c6... Update aws.tf
-  description = "Allows Consul nodes to describe instances for joining."
-  policy      = "${file("${path.module}/templates/policies/describe-instances.json")}"
-}
-
-# Attach the policy
-resource "aws_iam_policy_attachment" "consul-join" {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  name       = "final_project-consul-join"
-=======
-  name       = "${var.namespace}-consul-join"
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  name       = "${var.namespace}-consul-join"
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  name       = "${var.namespace}-consul-join"
->>>>>>> parent of 0a0a5c6... Update aws.tf
-  roles      = ["${aws_iam_role.consul-join.name}"]
-  policy_arn = "${aws_iam_policy.consul-join.arn}"
-}
-
-# Create the instance profile
-resource "aws_iam_instance_profile" "consul-join" {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  name  = "final_project-consul-join"
-  role = "${aws_iam_role.consul-join.name}"
-}
-
-resource "aws_security_group" "elb_security_group" {
-  name = "ELB-SG"
-  description = "ELB Security Group"
-  vpc_id      = "${aws_vpc.consul.id}"
-
-  ingress {
-    from_port = 0
-    protocol = "-1"
-    to_port = 0
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow web traffic to load balancer"
-  }
-
-  egress {
-    from_port = 0
-    protocol = "-1"
-    to_port = 0
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-} 
-}
-=======
-  name  = "${var.namespace}-consul-join"
-  roles = ["${aws_iam_role.consul-join.name}"]
-}
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  name  = "${var.namespace}-consul-join"
-  roles = ["${aws_iam_role.consul-join.name}"]
-}
->>>>>>> parent of 0a0a5c6... Update aws.tf
-=======
-  name  = "${var.namespace}-consul-join"
-  roles = ["${aws_iam_role.consul-join.name}"]
-}
->>>>>>> parent of 0a0a5c6... Update aws.tf
