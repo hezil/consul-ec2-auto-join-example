@@ -1,3 +1,23 @@
+terraform {
+  backend "s3" {
+  region="us-east-2"
+  key="layer2/backend.tfstate"
+  bucket="terraform-remote-state-11.03.2019"
+  }
+}
+
+data "terraform_remote_state" "network_configuration" {
+  backend = "s3"
+
+  config {
+    bucket = "${var.remote_state_bucket}"
+    key    = "${var.remote_state_key}"
+    region = "${var.region}"
+    access_key = ""
+    secret_key = ""
+  }
+}
+
 # Create the user-data for the Consul server
 data "template_file" "server" {
   count    = "${var.servers}"
