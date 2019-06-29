@@ -43,19 +43,34 @@ sudo tee /etc/consul.d/config.json > /dev/null <<EOF
 }
 EOF
 
-sudo tee /etc/init/consul.conf > /dev/null <<"EOF"
-description "Consul"
-start on runlevel [2345]
-stop on runlevel [06]
-respawn
-post-stop exec sleep 5
-# This is to avoid Upstart re-spawning the process upon `consul leave`
-normal exit 0 INT
-# Stop consul will not mark node as failed but left
-kill signal INT
-exec /usr/local/bin/consul agent \
-  -config-dir="/etc/consul.d"
+# Create user & grant ownership of folders
+sudo useradd consul
+sudo chown -R consul:consul /opt/consul /etc/consul.d /run/consul
+
+
+# Configure consul service
+sudo tee /etc/systemd/system/consul.service > /dev/null <<"EOF"
+[Unit]
+Description=Consul service discovery agent
+Requires=network-online.target
+After=network.target
+
+[Service]
+User=consul
+Group=consul
+PIDFile=/run/consul/consul.pid
+Restart=on-failure
+Environment=GOMAXPROCS=2
+ExecStartPre=[ -f "/run/consul/consul.pid" ] && /usr/bin/rm -f /run/consul/consul.pid
+ExecStart=/usr/local/bin/consul agent -pid-file=/run/consul/consul.pid -config-dir=/etc/consul.d
+ExecReload=/bin/kill -s HUP $MAINPID
+KillSignal=SIGINT
+TimeoutStopSec=5
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-sudo service consul stop || true
-sudo service consul start
+sudo systemctl daemon-reload
+sudo systemctl enable consul.service
+sudo systemctl start consul.service
