@@ -24,21 +24,18 @@ data "template_file" "server" {
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
 
   vars {
-    consul_version = "0.7.5"
-
+    consul_version = "1.4.0"
     config = <<EOF
-     "bootstrap_expect": 3,
      "node_name": "${var.namespace}-server-${count.index}",
-     "retry_join_ec2": {
-       "tag_key": "${var.consul_join_tag_key}",
-       "tag_value": "${var.consul_join_tag_value}"
-     },
-     "server": true
+     "server": true,
+     "bootstrap_expect": 3,
+     "ui": true,
+     "client_addr": "0.0.0.0"
     EOF
   }
 }
 
-# Create the user-data for the Consul server
+# Create the user-data for the Consul client
 data "template_file" "client" {
   count    = "${var.clients}"
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
@@ -47,10 +44,7 @@ data "template_file" "client" {
 
     config = <<EOF
      "node_name": "${var.namespace}-client-${count.index}",
-     "retry_join_ec2": {
-       "tag_key": "${var.consul_join_tag_key}",
-       "tag_value": "${var.consul_join_tag_value}"
-     },
+     "enable_script_checks": true,
      "server": false
     EOF
   }
@@ -60,9 +54,9 @@ data "template_file" "client" {
 resource "aws_instance" "server" {
   count = "${var.servers}"
 
-  ami           = "${data.aws_ami.ubuntu-1404.id}"
+  ami           = "${lookup(var.ami, var.region)}"
   instance_type = "${var.instance_type}"
-  key_name      = "${aws_key_pair.consul.id}"
+  key_name      = "${var.key_name}"
 
   subnet_id              = "${element(aws_subnet.consul.*.id, count.index)}"
   iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
@@ -71,6 +65,7 @@ resource "aws_instance" "server" {
   tags = "${map(
     "ConsulName", "${var.namespace}-server-${count.index}",
     var.consul_join_tag_key, var.consul_join_tag_value,
+    "consul_server" = "true",
     "Name", "k8s_m${count.index}",
     "Group", "k8s_m",
     "Role","k8s"
@@ -82,9 +77,9 @@ resource "aws_instance" "server" {
 resource "aws_instance" "client" {
   count = "${var.clients}"
 
-  ami           = "${data.aws_ami.ubuntu-1404.id}"
+  ami           = "${lookup(var.ami, var.region)}"
   instance_type = "${var.instance_type}"
-  key_name      = "${aws_key_pair.consul.id}"
+  key_name      = "${var.key_name}"
 
   subnet_id              = "${element(aws_subnet.consul.*.id, count.index)}"
   iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
