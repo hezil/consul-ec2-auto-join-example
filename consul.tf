@@ -1,57 +1,30 @@
-terraform {
-  backend "s3" {
-  region="us-east-2"
-  key="layer2/backend.tfstate"
-  bucket="terraform-remote-state-11.03.2019"
-  }
-}
-
-data "terraform_remote_state" "network_configuration" {
-  backend = "s3"
-
-  config {
-    bucket = "terraform-remote-state-11.03.2019"
-    key    = "layer1/infrastructure.tfstate"
-    region = "us-east-2"
-    access_key = ""
-    secret_key = ""
-  }
-}
-
 # Create the user-data for the Consul server
-data "template_file" "server" {
+data "template_file" "consul_server" {
   count    = "${var.servers}"
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
 
   vars {
-    consul_version = "1.4.0"
-
+    consul_version = "${var.consul_version}"
     config = <<EOF
+     "node_name": "opsschool-server-${count.index+1}",
+     "server": true,
      "bootstrap_expect": 3,
      "ui": true,
-     "node_name": "${var.namespace}-server-${count.index}",
-     "retry_join_ec2": {
-       "tag_key": "${var.consul_join_tag_key}",
-       "tag_value": "${var.consul_join_tag_value}"
-     },
-     "server": true
+     "client_addr": "0.0.0.0"
     EOF
   }
 }
 
-# Create the user-data for the Consul server
-data "template_file" "client" {
+# Create the user-data for the Consul agent
+data "template_file" "consul_client" {
   count    = "${var.clients}"
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
-  vars {
-    consul_version = "1.4.0"
 
+  vars {
+    consul_version = "${var.consul_version}"
     config = <<EOF
-     "node_name": "${var.namespace}-client-${count.index}",
-     "retry_join_ec2": {
-       "tag_key": "${var.consul_join_tag_key}",
-       "tag_value": "${var.consul_join_tag_value}"
-     },
+     "node_name": "opsschool-client-${count.index+1}",
+     "enable_script_checks": true,
      "server": false
     EOF
   }
@@ -61,52 +34,54 @@ data "template_file" "client" {
 resource "aws_instance" "server" {
   count = "${var.servers}"
 
-  ami           = "ami-0653e888ec96eab9b"
+  ami           = "${lookup(var.ami, var.region)}"
   instance_type = "${var.instance_type}"
-  key_name      = "${aws_key_pair.consul.id}"
+  key_name      = "${var.key_name}"
 
   subnet_id              = "${element(aws_subnet.consul.*.id, count.index)}"
   iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
-  vpc_security_group_ids = ["${aws_security_group.consul.id}"]
+  vpc_security_group_ids = ["${aws_security_group.opsschool_consul.id}"]
 
-  tags = "${map(
-    "ConsulName", "${var.namespace}-server-${count.index}",
-    var.consul_join_tag_key, var.consul_join_tag_value,
+  tags = {
+    ConsulName = "opsschool-server-${count.index+1}"
+    consul_server = "true"
     "Name", "k8s_m${count.index}",
     "Group", "k8s_m",
     "Role","k8s"
   )}"
 
-  user_data = "${element(data.template_file.server.*.rendered, count.index)}"
+  user_data = "${element(data.template_file.consul_server.*.rendered, count.index)}"
 }
 
-resource "aws_instance" "client" {
+
+resource "aws_instance" "consul_client" {
   count = "${var.clients}"
 
-  ami           = "ami-0653e888ec96eab9b"
-  instance_type = "${var.instance_type}"
-  key_name      = "${aws_key_pair.consul.id}"
+  ami           = "${lookup(var.ami, var.region)}"
+  instance_type = "t2.micro"
+  key_name      = "${var.key_name}"
+
 
   subnet_id              = "${element(aws_subnet.consul.*.id, count.index)}"
   iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
   vpc_security_group_ids = ["${aws_security_group.consul.id}"]
 
-  tags = "${map(
-    "CosulName", "${var.namespace}-client-${count.index}",
-    var.consul_join_tag_key, var.consul_join_tag_value,
+  tags = {
+    Name = "opsschool-client-${count.index+1}"
+
     "Name", "k8s_s${count.index}",
     "Group", "k8s_s",
     "Role","k8s"
   )}"
 
-  user_data = "${element(data.template_file.client.*.rendered, count.index)}"
+  user_data = "${element(data.template_file.consul_client.*.rendered, count.index)}"
 }
 
 resource "aws_elb" "webapp_load_balancer" {
   name            = "Production-WebApp-LoadBalancer"
   internal        = false
-  //instances        = ["${element(aws_instance.client.*.id, count.index)}"]
-  instances        = ["${aws_instance.client.*.id}"]
+  //instances        = ["${element(aws_instance.consul_client.*.id, count.index)}"]
+  instances        = ["${aws_instance.consul_client.*.id}"]
   security_groups = ["${aws_security_group.consul.id}"]
   subnets = ["${aws_subnet.consul.*.id}"]
   "listener" {
@@ -125,9 +100,9 @@ resource "aws_elb" "webapp_load_balancer" {
 }
 
 output "servers" {
-  value = ["${aws_instance.server.*.public_ip}"]
+  value = ["${aws_instance.consul_server.*.public_ip}"]
 }
 
 output "clients" {
-  value = ["${aws_instance.client.*.public_ip}"]
+  value = ["${aws_instance.consul_client.*.public_ip}"]
 }
