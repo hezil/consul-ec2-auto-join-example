@@ -62,13 +62,13 @@ resource "aws_security_group" "consul" {
   name_prefix = "${var.namespace}"
   vpc_id      = "${aws_vpc.consul.id}"
   
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
-    description = "Allow all inside security group"
-  }
+#   ingress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     self        = true
+#     description = "Allow all inside security group"
+#   }
 
   ingress {
     from_port   = 22
@@ -122,7 +122,7 @@ resource "aws_security_group" "consul" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.0.0.0/8"]
+    cidr_blocks = ["10.1.0.0/16"]
   }
 
   egress {
