@@ -69,7 +69,7 @@ resource "aws_instance" "server" {
     consul_server = "true"
     Name = "k8s_m${count.index}"
     Group = "k8s_m"
-    Role = k8s"
+    Role = "k8s"
   }  
   
  
@@ -91,7 +91,7 @@ resource "aws_instance" "client" {
     ConsulName = "${var.namespace}-${count.index+1}"
     Name = "k8s_s${count.index}"
     Group = "k8s_s"
-    Role = k8s"
+    Role = "k8s"
   }  
 
 
