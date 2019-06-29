@@ -54,7 +54,7 @@ data "template_file" "client" {
 resource "aws_instance" "server" {
   count = "${var.servers}"
 
-  ami           = "${lookup(var.ami, var.region)}"
+  ami           = "${lookup(var.ami, var.aws_region)}"
   instance_type = "${var.instance_type}"
   key_name      = "${var.key_name}"
 
@@ -79,7 +79,7 @@ resource "aws_instance" "server" {
 resource "aws_instance" "client" {
   count = "${var.clients}"
 
-  ami           = "${lookup(var.ami, var.region)}"
+  ami           = "${lookup(var.ami, var.aws_region)}"
   instance_type = "${var.instance_type}"
   key_name      = "${var.key_name}"
 
