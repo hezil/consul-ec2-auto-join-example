@@ -35,7 +35,7 @@ variable "clients" {
 
 variable "consul_version" {
   description = "The version of Consul to install (server and client)."
-  default     = "0.7.5"
+  default     = "1.5.2"
 }
 
 variable "vpc_cidr_block" {
