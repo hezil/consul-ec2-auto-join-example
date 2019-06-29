@@ -24,7 +24,7 @@ data "template_file" "server" {
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
 
   vars {
-    consul_version = "0.7.5"
+    consul_version = "1.5.2"
 
     config = <<EOF
      "bootstrap_expect": 3,
@@ -43,7 +43,7 @@ data "template_file" "client" {
   count    = "${var.clients}"
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
   vars {
-    consul_version = "0.7.5"
+    consul_version = "1.5.2"
 
     config = <<EOF
      "node_name": "${var.namespace}-client-${count.index}",
@@ -60,7 +60,7 @@ data "template_file" "client" {
 resource "aws_instance" "server" {
   count = "${var.servers}"
 
-  ami           = "${data.aws_ami.ubuntu-1404.id}"
+  ami           = "ami-0450f6efcdce7c116"
   instance_type = "${var.instance_type}"
   key_name      = "${aws_key_pair.consul.id}"
 
@@ -82,7 +82,7 @@ resource "aws_instance" "server" {
 resource "aws_instance" "client" {
   count = "${var.clients}"
 
-  ami           = "${data.aws_ami.ubuntu-1404.id}"
+  ami           = "ami-0450f6efcdce7c116"
   instance_type = "${var.instance_type}"
   key_name      = "${aws_key_pair.consul.id}"
 
