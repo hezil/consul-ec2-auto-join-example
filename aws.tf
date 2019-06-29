@@ -1,4 +1,4 @@
-Get the list of official Canonical Ubunt 14.04 AMIs
+#Get the list of official Canonical Ubunt 14.04 AMIs
 data "aws_ami" "ubuntu-1404" {
   most_recent = true
 
