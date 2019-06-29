@@ -67,14 +67,20 @@ resource "aws_subnet" "consul" {
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 resource "aws_security_group" "final_project" {
   name        = "final_project"
   description = "Allow ssh & consul inbound traffic"
 =======
+=======
+>>>>>>> parent of 0a0a5c6... Update aws.tf
 # A security group that makes the instances accessible
 resource "aws_security_group" "consul" {
   name_prefix = "${var.namespace}"
   vpc_id      = "${aws_vpc.consul.id}"
+<<<<<<< HEAD
+>>>>>>> parent of 0a0a5c6... Update aws.tf
+=======
 >>>>>>> parent of 0a0a5c6... Update aws.tf
 
   ingress {
@@ -103,8 +109,13 @@ resource "aws_security_group" "consul" {
     to_port     = 30036
     cidr_blocks = ["0.0.0.0/0"]
 <<<<<<< HEAD
+<<<<<<< HEAD
       
   ingress {
+=======
+  }
+  egress {
+>>>>>>> parent of 0a0a5c6... Update aws.tf
 =======
   }
   egress {
@@ -145,7 +156,11 @@ resource "aws_key_pair" "consul" {
 # Create an IAM role for the auto-join
 resource "aws_iam_role" "consul-join" {
 <<<<<<< HEAD
+<<<<<<< HEAD
   name               = "final_project-consul-join"
+=======
+  name               = "${var.namespace}-consul-join"
+>>>>>>> parent of 0a0a5c6... Update aws.tf
 =======
   name               = "${var.namespace}-consul-join"
 >>>>>>> parent of 0a0a5c6... Update aws.tf
@@ -155,7 +170,11 @@ resource "aws_iam_role" "consul-join" {
 # Create the policy
 resource "aws_iam_policy" "consul-join" {
 <<<<<<< HEAD
+<<<<<<< HEAD
   name        = "final_project-consul-join"
+=======
+  name        = "${var.namespace}-consul-join"
+>>>>>>> parent of 0a0a5c6... Update aws.tf
 =======
   name        = "${var.namespace}-consul-join"
 >>>>>>> parent of 0a0a5c6... Update aws.tf
@@ -166,7 +185,11 @@ resource "aws_iam_policy" "consul-join" {
 # Attach the policy
 resource "aws_iam_policy_attachment" "consul-join" {
 <<<<<<< HEAD
+<<<<<<< HEAD
   name       = "final_project-consul-join"
+=======
+  name       = "${var.namespace}-consul-join"
+>>>>>>> parent of 0a0a5c6... Update aws.tf
 =======
   name       = "${var.namespace}-consul-join"
 >>>>>>> parent of 0a0a5c6... Update aws.tf
@@ -176,6 +199,7 @@ resource "aws_iam_policy_attachment" "consul-join" {
 
 # Create the instance profile
 resource "aws_iam_instance_profile" "consul-join" {
+<<<<<<< HEAD
 <<<<<<< HEAD
   name  = "final_project-consul-join"
   role = "${aws_iam_role.consul-join.name}"
@@ -202,6 +226,11 @@ resource "aws_security_group" "elb_security_group" {
   }
 } 
 }
+=======
+  name  = "${var.namespace}-consul-join"
+  roles = ["${aws_iam_role.consul-join.name}"]
+}
+>>>>>>> parent of 0a0a5c6... Update aws.tf
 =======
   name  = "${var.namespace}-consul-join"
   roles = ["${aws_iam_role.consul-join.name}"]
