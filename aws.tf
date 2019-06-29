@@ -133,10 +133,31 @@ resource "aws_security_group" "consul" {
   }
 }
 
-resource "aws_key_pair" "consul" {
-  key_name   = "${var.namespace}"
-  public_key = "${file("${var.public_key_path}")}"
+resource "aws_security_group" "elb_security_group" {
+  name = "ELB-SG"
+  description = "ELB Security Group"
+  vpc_id = "${data.terraform_remote_state.network_configuration.vpc_id}"
+
+  ingress {
+    from_port = 0
+    protocol = "-1"
+    to_port = 0
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow web traffic to load balancer"
+  }
+
+  egress {
+    from_port = 0
+    protocol = "-1"
+    to_port = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
+
+# resource "aws_key_pair" "consul" {
+#   key_name   = "${var.namespace}"
+#   public_key = "${file("${var.public_key_path}")}"
+# }
 
 # Create an IAM role for the auto-join
 resource "aws_iam_role" "consul-join" {
