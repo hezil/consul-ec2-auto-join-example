@@ -35,17 +35,17 @@ variable "clients" {
 
 variable "consul_version" {
   description = "The version of Consul to install (server and client)."
-  default     = "1.4.0"
+  default     = "0.7.5"
 }
 
 variable "vpc_cidr_block" {
   description = "The top-level CIDR block for the VPC."
-  default     = "10.88.0.0/16"
+  default     = "10.1.0.0/16"
 }
 
 variable "cidr_blocks" {
   description = "The CIDR blocks to create the workstations in."
-  default     = ["10.88.1.0/24", "10.88.2.0/24"]
+  default     = ["10.1.1.0/24", "10.1.2.0/24"]
 }
 
 variable "consul_join_tag_key" {
@@ -58,17 +58,176 @@ variable "consul_join_tag_value" {
   default     = "training"
 }
 
-variable "key_name" {
-  description = "name of ssh key to attach to hosts"
-    default     = "hezkeypair"
-  
+variable "public_key_path" {
+  description = "The absolute path on disk to the SSH public key."
+  default     = "~/.ssh/id_rsa.pub"
 }
 
-variable "ami" {
-  description = "ami to use - based on region"
-  default = {
-    "us-east-1" = "ami-0565af6e282977273"
-#     "us-east-2" = "ami-0653e888ec96eab9b"
-    "us-east-2" = "ami-0450f6efcdce7c116"
-  }
+variable "animals" {
+  default = [
+    "anaconda",
+    "ant",
+    "ape",
+    "badger",
+    "bass",
+    "bat",
+    "bear",
+    "bee",
+    "beetle",
+    "bird",
+    "bison",
+    "buffalo",
+    "bulldog",
+    "butterfly",
+    "camel",
+    "cat",
+    "catfish",
+    "cheetah",
+    "chicken",
+    "chipmunk",
+    "cobra",
+    "cod",
+    "coyote",
+    "crab",
+    "cricket",
+    "crow",
+    "deer",
+    "dinosaur",
+    "dog",
+    "dolphin",
+    "donkey",
+    "dove",
+    "dragonfly",
+    "duck",
+    "eagle",
+    "elephant",
+    "elk",
+    "falcon",
+    "fish",
+    "flamingo",
+    "fly",
+    "fowl",
+    "fox",
+    "frog",
+    "goat",
+    "goldfish",
+    "gopher",
+    "gorilla",
+    "grasshopper",
+    "greyhound",
+    "haddock",
+    "halibut",
+    "hamster",
+    "hawk",
+    "hedgehog",
+    "heron",
+    "herring",
+    "hornet",
+    "horse",
+    "hound",
+    "human",
+    "husky",
+    "jaguar",
+    "jellyfish",
+    "kangaroo",
+    "koala",
+    "ladybug",
+    "leopard",
+    "lion",
+    "lizard",
+    "llama",
+    "lobster",
+    "lynx",
+    "mackerel",
+    "mammal",
+    "marlin",
+    "mockingbird",
+    "mole",
+    "monkey",
+    "moose",
+    "mosquito",
+    "moth",
+    "mouse",
+    "mule",
+    "mussel",
+    "octopus",
+    "orca",
+    "ostrich",
+    "otter",
+    "owl",
+    "ox",
+    "oyster",
+    "panda",
+    "panther",
+    "parrot",
+    "peacock",
+    "peafowl",
+    "pelican",
+    "penguin",
+    "pig",
+    "pigeon",
+    "pike",
+    "pony",
+    "poodle",
+    "porcupine",
+    "possum",
+    "prawn",
+    "primate",
+    "puffin",
+    "puma",
+    "python",
+    "rabbit",
+    "raccoon",
+    "rat",
+    "raven",
+    "rooster",
+    "salamander",
+    "salmon",
+    "scallop",
+    "scorpion",
+    "seahorse",
+    "shark",
+    "sheep",
+    "shrimp",
+    "silkworm",
+    "skunk",
+    "sloth",
+    "slug",
+    "snail",
+    "snake",
+    "sparrow",
+    "spider",
+    "squid",
+    "squirrel",
+    "starfish",
+    "stingray",
+    "stork",
+    "swallow",
+    "swan",
+    "swordfish",
+    "tapeworm",
+    "termite",
+    "tern",
+    "terrier",
+    "tiger",
+    "toad",
+    "toucan",
+    "trout",
+    "tuna",
+    "turkey",
+    "turtle",
+    "viper",
+    "vulture",
+    "wallaby",
+    "walrus",
+    "wasp",
+    "weasel",
+    "whale",
+    "wildcat",
+    "wolf",
+    "wombat",
+    "worm",
+    "yak",
+    "zebra",
+  ]
 }
