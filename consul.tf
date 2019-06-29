@@ -28,6 +28,7 @@ data "template_file" "server" {
 
     config = <<EOF
      "bootstrap_expect": 3,
+     "ui": true,
      "node_name": "${var.namespace}-server-${count.index}",
      "retry_join_ec2": {
        "tag_key": "${var.consul_join_tag_key}",
