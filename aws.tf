@@ -169,4 +169,4 @@ resource "aws_security_group" "elb_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 } 
-
+}
