@@ -24,7 +24,7 @@ data "template_file" "server" {
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
 
   vars {
-    consul_version = "1.5.2"
+    consul_version = "0.7.5"
 
     config = <<EOF
      "bootstrap_expect": 3,
@@ -44,7 +44,7 @@ data "template_file" "client" {
   count    = "${var.clients}"
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
   vars {
-    consul_version = "1.5.2"
+    consul_version = "0.7.5"
 
     config = <<EOF
      "node_name": "${var.namespace}-client-${count.index}",
