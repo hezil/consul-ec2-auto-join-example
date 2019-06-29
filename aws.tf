@@ -168,5 +168,5 @@ resource "aws_security_group" "elb_security_group" {
     to_port = 0
     cidr_blocks = ["0.0.0.0/0"]
   }
-}
+} 
 
