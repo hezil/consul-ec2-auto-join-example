@@ -35,7 +35,7 @@ variable "clients" {
 
 variable "consul_version" {
   description = "The version of Consul to install (server and client)."
-  default     = "0.7.5"
+  default     = "1.4.0"
 }
 
 variable "vpc_cidr_block" {
@@ -61,11 +61,6 @@ variable "consul_join_tag_value" {
 variable "public_key_path" {
   description = "The absolute path on disk to the SSH public key."
   default     = "~/.ssh/id_rsa.pub"
-}
-
-variable "consul_version" {
-  description = "The version of Consul to install (server and client)."
-  default     = "1.4.0"
 }
 
 variable "key_name" {
