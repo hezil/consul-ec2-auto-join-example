@@ -1,4 +1,4 @@
-namespace = "consul-blog"
+namespace = "final_project"
 
 instance_type = "t2.micro"
 
