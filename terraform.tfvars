@@ -1,10 +1,10 @@
 namespace = "final_project"
 
-instance_type = "t2.micro"
+instance_type = "t2.medium"
 
 servers = 3
 
-clients = 3
+clients = 2
 
 aws_region = "us-east-2"
 
