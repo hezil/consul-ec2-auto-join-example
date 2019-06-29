@@ -17,9 +17,9 @@
 
 terraform {
   backend "s3" {
-    region="us-east-2"
-    key="layer1/infrastructure.tfstate"
-    bucket="terraform-remote-state-11.03.2019"
+    bucket = "us-east-2"
+    key    = "layer1/infrastructure.tfstate"
+    region = "terraform-remote-state-11.03.2019"
   }
 }
 
