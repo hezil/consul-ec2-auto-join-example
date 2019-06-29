@@ -66,26 +66,30 @@ resource "aws_subnet" "consul" {
   }
 }
 
+<<<<<<< HEAD
 resource "aws_security_group" "final_project" {
   name        = "final_project"
   description = "Allow ssh & consul inbound traffic"
+=======
+# A security group that makes the instances accessible
+resource "aws_security_group" "consul" {
+  name_prefix = "${var.namespace}"
+  vpc_id      = "${aws_vpc.consul.id}"
+>>>>>>> parent of 0a0a5c6... Update aws.tf
 
   ingress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    self        = true
-    description = "Allow all inside security group"
+    cidr_blocks = ["10.0.0.0/8"]
   }
-
+  
   ingress {
     from_port   = 22
+    protocol    = "TCP"
     to_port     = 22
-    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow ssh from the world"
   }
-
   ingress {
     from_port   = 80
     protocol    = "TCP"
@@ -98,53 +102,81 @@ resource "aws_security_group" "final_project" {
     protocol    = "TCP"
     to_port     = 30036
     cidr_blocks = ["0.0.0.0/0"]
+<<<<<<< HEAD
       
   ingress {
+=======
+  }
+  egress {
+>>>>>>> parent of 0a0a5c6... Update aws.tf
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["10.0.0.0/8"]
-  }
-  
-  ingress {
-    from_port   = 8500
-    to_port     = 8500
-    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow consul UI access from the world"
+  }
+}
+
+resource "aws_security_group" "elb_security_group" {
+  name = "ELB-SG"
+  description = "ELB Security Group"
+  vpc_id      = "${aws_vpc.consul.id}"
+
+  ingress {
+    from_port = 0
+    protocol = "-1"
+    to_port = 0
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow web traffic to load balancer"
   }
 
   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    cidr_blocks     = ["0.0.0.0/0"]
-    description     = "Allow all outside security group"
+    from_port = 0
+    protocol = "-1"
+    to_port = 0
+    cidr_blocks = ["0.0.0.0/0"]
   }
+}
+
+resource "aws_key_pair" "consul" {
+  key_name   = "${var.namespace}"
+  public_key = "${file("${var.public_key_path}")}"
 }
 
 # Create an IAM role for the auto-join
 resource "aws_iam_role" "consul-join" {
+<<<<<<< HEAD
   name               = "final_project-consul-join"
+=======
+  name               = "${var.namespace}-consul-join"
+>>>>>>> parent of 0a0a5c6... Update aws.tf
   assume_role_policy = "${file("${path.module}/templates/policies/assume-role.json")}"
 }
 
 # Create the policy
 resource "aws_iam_policy" "consul-join" {
+<<<<<<< HEAD
   name        = "final_project-consul-join"
+=======
+  name        = "${var.namespace}-consul-join"
+>>>>>>> parent of 0a0a5c6... Update aws.tf
   description = "Allows Consul nodes to describe instances for joining."
   policy      = "${file("${path.module}/templates/policies/describe-instances.json")}"
 }
 
 # Attach the policy
 resource "aws_iam_policy_attachment" "consul-join" {
+<<<<<<< HEAD
   name       = "final_project-consul-join"
+=======
+  name       = "${var.namespace}-consul-join"
+>>>>>>> parent of 0a0a5c6... Update aws.tf
   roles      = ["${aws_iam_role.consul-join.name}"]
   policy_arn = "${aws_iam_policy.consul-join.arn}"
 }
 
 # Create the instance profile
 resource "aws_iam_instance_profile" "consul-join" {
+<<<<<<< HEAD
   name  = "final_project-consul-join"
   role = "${aws_iam_role.consul-join.name}"
 }
@@ -170,3 +202,8 @@ resource "aws_security_group" "elb_security_group" {
   }
 } 
 }
+=======
+  name  = "${var.namespace}-consul-join"
+  roles = ["${aws_iam_role.consul-join.name}"]
+}
+>>>>>>> parent of 0a0a5c6... Update aws.tf
