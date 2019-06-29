@@ -15,6 +15,15 @@
 #   owners = ["099720109477"] # Canonical
 # }
 
+terraform {
+  backend "s3" {
+    region="us-east-2"
+    key="layer1/infrastructure.tfstate"
+    bucket="terraform-remote-state-11.03.2019"
+  }
+}
+
+
 # Create a VPC to launch our instances into
 resource "aws_vpc" "consul" {
   cidr_block           = "${var.vpc_cidr_block}"
