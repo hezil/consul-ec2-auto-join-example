@@ -8,6 +8,15 @@ PUBLIC_IP=$(curl http://169.254.169.254/latest/meta-data/public-ipv4)
 echo "Installing dependencies..."
 sudo apt-get -qq update &>/dev/null
 sudo apt-get -yqq install unzip &>/dev/null
+sudo apt-get -yqq install unzip dnsmasq &>/dev/null
+
+echo "Configuring dnsmasq..."
+cat << EODMCF >/etc/dnsmasq.d/10-consul
+# Enable forward lookup of the 'consul' domain:
+server=/consul/127.0.0.1#8600
+EODMCF
+
+sudo service dnsmasq restart
 
 echo "Fetching Consul..."
 cd /tmp
