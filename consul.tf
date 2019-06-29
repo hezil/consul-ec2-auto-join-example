@@ -10,9 +10,9 @@ data "terraform_remote_state" "network_configuration" {
   backend = "s3"
 
   config {
-    bucket = "${var.remote_state_bucket}"
-    key    = "${var.remote_state_key}"
-    region = "${var.region}"
+    bucket = "terraform-remote-state-11.03.2019"
+    key    = "layer1/infrastructure.tfstate"
+    region = "us-east-2"
     access_key = ""
     secret_key = ""
   }
