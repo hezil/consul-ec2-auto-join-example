@@ -24,7 +24,7 @@ data "template_file" "server" {
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
 
   vars {
-    consul_version = "1.4.0"
+    consul_version = "${var.consul_version}"
     config = <<EOF
      "node_name": "${var.namespace}-server-${count.index}",
      "server": true,
@@ -40,7 +40,7 @@ data "template_file" "client" {
   count    = "${var.clients}"
   template = "${file("${path.module}/templates/consul.sh.tpl")}"
   vars {
-    consul_version = "0.7.5"
+    consul_version = "${var.consul_version}"
 
     config = <<EOF
      "node_name": "${var.namespace}-client-${count.index}",
@@ -62,15 +62,17 @@ resource "aws_instance" "server" {
   iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
   vpc_security_group_ids = ["${aws_security_group.consul.id}"]
 
-  tags = "${map(
-    "ConsulName", "${var.namespace}-server-${count.index}",
-    var.consul_join_tag_key, var.consul_join_tag_value,
-    "consul_server" = "true",
-    "Name", "k8s_m${count.index}",
-    "Group", "k8s_m",
-    "Role","k8s"
-  )}"
 
+
+  tags = {
+    ConsulName = "${var.namespace}-${count.index+1}"
+    consul_server = "true"
+    Name = "k8s_m${count.index}"
+    Group = "k8s_m"
+    Role = k8s"
+  }  
+  
+ 
   user_data = "${element(data.template_file.server.*.rendered, count.index)}"
 }
 
@@ -85,16 +87,17 @@ resource "aws_instance" "client" {
   iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
   vpc_security_group_ids = ["${aws_security_group.consul.id}"]
 
-  tags = "${map(
-    "CosulName", "${var.namespace}-client-${count.index}",
-    var.consul_join_tag_key, var.consul_join_tag_value,
-    "Name", "k8s_s${count.index}",
-    "Group", "k8s_s",
-    "Role","k8s"
-  )}"
+  tags = {
+    ConsulName = "${var.namespace}-${count.index+1}"
+    Name = "k8s_s${count.index}"
+    Group = "k8s_s"
+    Role = k8s"
+  }  
+
 
   user_data = "${element(data.template_file.client.*.rendered, count.index)}"
 }
+
 
 resource "aws_elb" "webapp_load_balancer" {
   name            = "Production-WebApp-LoadBalancer"
