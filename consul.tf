@@ -63,9 +63,9 @@ resource "aws_instance" "server" {
   vpc_security_group_ids = ["${aws_security_group.consul.id}"]
 
   tags = {
-    Name = "${var.namespace}-server-${count.index+1}"
-    consul_server = "true"
-    Group = "consul-servers"    
+    Name = "${var.namespace}_server_${count.index+1}"
+    consul-server = "true"
+    Group = "consul_servers"    
     Role = "consul"
   }  
   
