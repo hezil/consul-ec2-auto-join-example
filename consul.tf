@@ -85,7 +85,7 @@ resource "aws_instance" "client" {
 
   tags = {
     ConsulName = "${var.namespace}-${count.index+1}"
-    Name = "k8s_s${count.index}"
+    Name = "k8s_s${count.index+1}"
     Group = "k8s_s"
     Role = "k8s"
   }  
@@ -107,7 +107,7 @@ resource "aws_instance" "k8s_m" {
 
   tags = {
     ConsulName = "${var.namespace}-${count.index+1}"
-    Name = "k8s_m${count.index}"
+    Name = "k8s_m${count.index+1}"
     Group = "k8s_m"
     Role = "k8s"
   } 
