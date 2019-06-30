@@ -1,4 +1,4 @@
-namespace = "final_project"
+namespace = "consul"
 
 instance_type = "t2.medium"
 
