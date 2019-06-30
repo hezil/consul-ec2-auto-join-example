@@ -6,6 +6,8 @@ servers = 3
 
 clients = 2
 
+k8s_m = 1
+
 aws_region = "us-east-2"
 
 aws_access_key = ""
