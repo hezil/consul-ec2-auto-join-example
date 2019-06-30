@@ -62,19 +62,15 @@ resource "aws_instance" "server" {
   iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
   vpc_security_group_ids = ["${aws_security_group.consul.id}"]
 
-
-
   tags = {
-    ConsulName = "${var.namespace}-${count.index+1}"
+    Name = "${var.namespace}-${count.index+1}"
     consul_server = "true"
-    Name = "k8s_m${count.index}"
-    Group = "k8s_m"
-    Role = "k8s"
   }  
   
  
   user_data = "${element(data.template_file.server.*.rendered, count.index)}"
 }
+
 
 resource "aws_instance" "client" {
   count = "${var.clients}"
@@ -94,9 +90,35 @@ resource "aws_instance" "client" {
     Role = "k8s"
   }  
 
+  user_data = "${element(data.template_file.client.*.rendered, count.index)}"
+}
+
+
+resource "aws_instance" "k8s_m" {
+  count = "${var.k8s_m}"
+
+  ami           = "${lookup(var.ami, var.aws_region)}"
+  instance_type = "${var.instance_type}"
+  key_name      = "${var.key_name}"
+
+  subnet_id              = "${element(aws_subnet.consul.*.id, count.index)}"
+  iam_instance_profile   = "${aws_iam_instance_profile.consul-join.name}"
+  vpc_security_group_ids = ["${aws_security_group.consul.id}"]
+
+  tags = {
+    ConsulName = "${var.namespace}-${count.index+1}"
+    Name = "k8s_m${count.index}"
+    Group = "k8s_m"
+    Role = "k8s"
+  } 
+
 
   user_data = "${element(data.template_file.client.*.rendered, count.index)}"
 }
+
+
+
+
 
 
 resource "aws_elb" "webapp_load_balancer" {
