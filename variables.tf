@@ -33,6 +33,10 @@ variable "clients" {
   description = "The number of consul client instances"
 }
 
+variable "k8s_m" {
+  description = "The number of k8s_m instances"
+}
+
 variable "consul_version" {
   description = "The version of Consul to install (server and client)."
   default     = "1.4.0"
