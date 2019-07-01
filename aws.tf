@@ -111,6 +111,22 @@ resource "aws_security_group" "consul" {
   }
   
   ingress {
+    from_port   = 9107
+    to_port     = 9107
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow consul UI access from the world"
+  }
+  
+  ingress {
+    from_port   = 9100
+    to_port     = 9100
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow consul UI access from the world"
+  }
+  
+  ingress {
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
