@@ -26,7 +26,7 @@ data "template_file" "server" {
   vars {
     consul_version = "${var.consul_version}"
     config = <<EOF
-     "node_name": "${var.namespace}-server-${count.index}",
+     "node_name": "${var.namespace}-server-${count.index+1}",
      "server": true,
      "bootstrap_expect": 3,
      "ui": true,
@@ -43,7 +43,7 @@ data "template_file" "client" {
     consul_version = "${var.consul_version}"
 
     config = <<EOF
-     "node_name": "${var.namespace}-client-${count.index}",
+     "node_name": "${var.namespace}-client-${count.index+1}",
      "enable_script_checks": true,
      "server": false
     EOF
@@ -64,7 +64,7 @@ resource "aws_instance" "server" {
 
   tags = {
     Name = "${var.namespace}_server_${count.index+1}"
-    consul-server = "true"
+    consul_server = "true"
     Group = "consul_servers"    
     Role = "consul"
   }  
